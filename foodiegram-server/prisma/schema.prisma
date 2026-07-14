@@ -1,0 +1,118 @@
+// FoodieGram - Prisma Schema
+// PostgreSQL data model for the PERN stack backend
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ------------------------------------------------------
+// USER
+// A FoodieGram user who can create posts, follow restaurants,
+// like posts, and leave comments.
+// ------------------------------------------------------
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  username  String   @unique
+  email     String   @unique
+  password  String // hashed with bcrypt, never returned to client
+  bio       String?  @default("")
+  avatarUrl String?  @default("")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  posts        Post[]
+  comments     Comment[]
+  likes        Like[]
+  restaurants  Restaurant[] // restaurants this user "owns" / added
+
+  @@map("users")
+}
+
+// ------------------------------------------------------
+// RESTAURANT
+// A restaurant entity that posts can be tagged/linked to.
+// ------------------------------------------------------
+model Restaurant {
+  id           Int      @id @default(autoincrement())
+  name         String
+  description  String?  @default("")
+  address      String?  @default("")
+  cuisine      String?  @default("")
+  coverImageUrl String? @default("")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  ownerId Int?
+  owner   User?  @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+  posts   Post[]
+
+  @@map("restaurants")
+}
+
+// ------------------------------------------------------
+// POST
+// A food post: image + caption, optionally tagged to a restaurant.
+// ------------------------------------------------------
+model Post {
+  id        Int      @id @default(autoincrement())
+  caption   String?  @default("")
+  imageUrl  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  authorId Int
+  author   User @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  restaurantId Int?
+  restaurant   Restaurant? @relation(fields: [restaurantId], references: [id], onDelete: SetNull)
+
+  likes    Like[]
+  comments Comment[]
+
+  @@map("posts")
+}
+
+// ------------------------------------------------------
+// LIKE
+// Join table between User and Post. One like per user per post.
+// ------------------------------------------------------
+model Like {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  postId Int
+  post   Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, postId]) // prevents duplicate likes
+  @@map("likes")
+}
+
+// ------------------------------------------------------
+// COMMENT
+// A comment left by a user on a post.
+// ------------------------------------------------------
+model Comment {
+  id        Int      @id @default(autoincrement())
+  text      String
+  createdAt DateTime @default(now())
+
+  authorId Int
+  author   User @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  postId Int
+  post   Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@map("comments")
+}
