@@ -3,7 +3,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { UtensilsCrossed, Search, PlusSquare, LogOut, User } from "lucide-react";
+import { UtensilsCrossed, Search, PlusSquare, LogOut, User, Sparkles } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import ThemeToggle from "../common/ThemeToggle";
 import Avatar from "../common/Avatar";
@@ -50,13 +50,18 @@ const Navbar = ({ onCreateClick }) => {
           </Link>
 
           {isAuthenticated && (
-            <button
-              onClick={onCreateClick}
-              className="btn-icon hidden md:inline-flex"
-              aria-label="Create post"
-            >
-              <PlusSquare className="h-5 w-5 text-ink-900/70 dark:text-amber-50/70" />
-            </button>
+            <>
+              <Link to="/ai" className="btn-icon hidden md:inline-flex" aria-label="AI Hub">
+                <Sparkles className="h-5 w-5 text-ink-900/70 dark:text-amber-50/70 animate-pulse" />
+              </Link>
+              <button
+                onClick={onCreateClick}
+                className="btn-icon hidden md:inline-flex"
+                aria-label="Create post"
+              >
+                <PlusSquare className="h-5 w-5 text-ink-900/70 dark:text-amber-50/70" />
+              </button>
+            </>
           )}
 
           <ThemeToggle />

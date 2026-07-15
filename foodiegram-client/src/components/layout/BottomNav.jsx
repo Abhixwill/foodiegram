@@ -2,7 +2,7 @@
 // similar to Instagram's mobile app).
 
 import { NavLink } from "react-router-dom";
-import { Home, Search, PlusSquare, Store, User } from "lucide-react";
+import { Home, Search, PlusSquare, Store, User, Sparkles } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 
 const tabClass = ({ isActive }) =>
@@ -39,6 +39,13 @@ const BottomNav = ({ onCreateClick }) => {
         <Store className="h-5 w-5" />
         <span className="text-[10px] font-medium">Places</span>
       </NavLink>
+
+      {isAuthenticated && (
+        <NavLink to="/ai" className={tabClass}>
+          <Sparkles className="h-5 w-5" />
+          <span className="text-[10px] font-medium">AI Hub</span>
+        </NavLink>
+      )}
 
       <NavLink
         to={isAuthenticated ? `/profile/${user.username}` : "/login"}

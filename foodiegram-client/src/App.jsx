@@ -17,6 +17,7 @@ import Profile from "./pages/Profile";
 import Restaurants from "./pages/Restaurants";
 import RestaurantDetails from "./pages/RestaurantDetails";
 import Search from "./pages/Search";
+import AiHub from "./pages/AiHub";
 import NotFound from "./pages/NotFound";
 
 import { useAuth } from "./context/AuthContext";
@@ -70,6 +71,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <Feed onEditPost={openEditModal} refreshKey={feedRefreshKey} />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/ai"
+            element={
+              <ProtectedRoute>
+                <AiHub />
               </ProtectedRoute>
             }
           />

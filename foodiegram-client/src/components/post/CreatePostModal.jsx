@@ -3,9 +3,10 @@
 
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, ImagePlus } from "lucide-react";
+import { X, ImagePlus, Sparkles, Hash, Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { createPostApi, updatePostApi } from "../../api/post.api";
+import { generateCaptionApi, generateHashtagsApi } from "../../api/ai.api";
 import Button from "../common/Button";
 
 const CreatePostModal = ({ open, onClose, onSaved, editingPost }) => {
@@ -15,6 +16,67 @@ const CreatePostModal = ({ open, onClose, onSaved, editingPost }) => {
   const [imageFile, setImageFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  const [aiLoadingCaption, setAiLoadingCaption] = useState(false);
+  const [aiLoadingHashtags, setAiLoadingHashtags] = useState(false);
+  const aiLoading = aiLoadingCaption || aiLoadingHashtags;
+
+  const handleAiCaption = async () => {
+    if (!imageFile && !previewUrl) {
+      toast.error("Please upload an image first");
+      return;
+    }
+
+    setAiLoadingCaption(true);
+    try {
+      let res;
+      if (imageFile) {
+        const formData = new FormData();
+        formData.append("image", imageFile);
+        res = await generateCaptionApi(formData);
+      } else {
+        res = await generateCaptionApi({ imageUrl: previewUrl });
+      }
+
+      const suggestions = res.data.captions;
+      if (suggestions && suggestions.length > 0) {
+        setCaption(suggestions[0]);
+        toast.success("AI Caption generated!");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error(err.response?.data?.message || "Failed to generate caption");
+    } finally {
+      setAiLoadingCaption(false);
+    }
+  };
+
+  const handleAiHashtags = async () => {
+    setAiLoadingHashtags(true);
+    try {
+      let res;
+      if (imageFile) {
+        const formData = new FormData();
+        formData.append("image", imageFile);
+        formData.append("caption", caption);
+        res = await generateHashtagsApi(formData);
+      } else {
+        res = await generateHashtagsApi({ caption, imageUrl: previewUrl });
+      }
+
+      const tags = res.data.hashtags;
+      if (tags && tags.length > 0) {
+        const hashtagsString = tags.map((t) => `#${t}`).join(" ");
+        setCaption((prev) => (prev ? `${prev}\n\n${hashtagsString}` : hashtagsString));
+        toast.success("AI Hashtags added!");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error(err.response?.data?.message || "Failed to suggest hashtags");
+    } finally {
+      setAiLoadingHashtags(false);
+    }
+  };
 
   useEffect(() => {
     if (open) {
@@ -116,6 +178,37 @@ const CreatePostModal = ({ open, onClose, onSaved, editingPost }) => {
                 className="hidden"
               />
             </label>
+
+            {previewUrl && (
+              <div className="flex gap-2 justify-end">
+                <button
+                  type="button"
+                  onClick={handleAiCaption}
+                  disabled={aiLoading}
+                  className="text-xs font-semibold px-3 py-1.5 rounded-full glass hover:bg-coral-500/10 text-coral-600 dark:text-amber-200 flex items-center gap-1 transition-all disabled:opacity-50"
+                >
+                  {aiLoadingCaption ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Sparkles className="h-3.5 w-3.5" />
+                  )}
+                  AI Caption
+                </button>
+                <button
+                  type="button"
+                  onClick={handleAiHashtags}
+                  disabled={aiLoading}
+                  className="text-xs font-semibold px-3 py-1.5 rounded-full glass hover:bg-coral-500/10 text-coral-600 dark:text-amber-200 flex items-center gap-1 transition-all disabled:opacity-50"
+                >
+                  {aiLoadingHashtags ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Hash className="h-3.5 w-3.5" />
+                  )}
+                  AI Hashtags
+                </button>
+              </div>
+            )}
 
             <textarea
               value={caption}
